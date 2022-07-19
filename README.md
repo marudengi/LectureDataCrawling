@@ -16,8 +16,6 @@ packages : selenium, webdriver_manager
 
 ### windows에서 pip upgrade 액세스 거부 이슈
 
-[https://smorning.tistory.com/328](https://smorning.tistory.com/328)
-
 → vscode 관리자 권한 실행
 
 ### 너무 빠른 입력 대응책
