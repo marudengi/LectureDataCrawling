@@ -1,7 +1,8 @@
-# from crawler import Crawler as sc 
 from pytube import YouTube, exceptions, Playlist
 import json
 import os
+from unicodedata import normalize
+
 
 programming_sub_category = {
     "BasicProgramming" : "https://www.youtube.com/watch?v=-3DHpwy498o&list=PLuHgQVnccGMDtnr4nTSFfmocHL5FeH1xR&index=1"
@@ -29,14 +30,14 @@ categories = {
 category_title = "" # 강좌명 required
 category_sub_title = "" #부-강좌명
 category_intro = "" #강의 소개 
-category_thumbnail = [] #썸네일 
+category_thumbnail = "" #썸네일 
 category_difficulty = '중' #난이도
 category_tag = [] # 태그
 category_for_recommend = [] # 수강 추천 대상
 category_paid = 0 # 가격
 category_review = [] # 수강평
 category_body = "" # 강의 소개
-category_pay_div = True # 유무료 여부
+category_pay_div = "유료" # 유무료 여부
 category_teacher = "" # 강의자 required
 category_curriculum_summary = [] # 커리큘럼
 content_title = '' # 컨텐츠명 required
@@ -49,9 +50,11 @@ content_data_description = '' # 강의 상세 설명
 # image_down_dir = './image/'
 
 
-# if not os.path.exists('./image/'):
-#     os.mkdir('./image/')
+if not os.path.exists('./jsonfile/'):
+    os.mkdir('./jsonfile/')
 
+if not os.path.exists('./video/'):
+    os.mkdir('./video/')
 
 ################################## 카테고리 ###################################
 for category_name, category  in categories.items():
@@ -82,19 +85,20 @@ for category_name, category  in categories.items():
         ######################################## 개별 컨텐츠 작업 ############################################
         for order, content in enumerate(pl.video_urls):
             print(content)
-
+            
             ############################## 영상 다운로드 ##############################
             try:
                 yt = YouTube(content)
+                title = yt.title.replace('\\',' ').replace('/',' ').replace(':','-').replace('*',' ').replace('?',' ').replace('"',"'").replace('<','[').replace('>',']').replace('|',' ')
+                title = normalize('NFC',title)
             except exceptions.VideoUnavailable:
                 print(f'Video {content} is unavaialable, skipping.')
             else:
                 print(f'Downloading video: {content}')
                 yt.streams.filter(resolution='360p',file_extension='mp4',progressive=True)
-                yt.streams.get_by_itag(18).download(video_down_dir)
+                yt.streams.get_by_itag(18).download(output_path=video_down_dir, filename=title+'.mp4')
 
-            title = yt.title.replace('\\',' ').replace('/',' ').replace(':','-').replace('*',' ').replace('?',' ').replace('"',"'").replace('<','[').replace('>',']').replace('|',' ')
-
+            
             # print('video id : ' + yt.video_id)
             describe = yt.description.split('\n')
             content_data_body = describe[0]
@@ -105,6 +109,7 @@ for category_name, category  in categories.items():
                 "title": title , #{ type: String, required: true },// 컨텐츠명
                 "order" : order , #{ type: Number, default: 0 },// 콘텐츠 순서
                 "type" : content_type , #{ type: String, required: true }, // 콘텐츠 타입
+           		"lecture_id": "",#{ type: ObjectId , required: true, ref: "Lecture" }
                 "data" : {
                     "url" : content, #{ type: String, default:"" }, // 영상 및 자료 링크
                     "body" : content_data_body, #{ type: String, default:""  }, // 내용
@@ -127,7 +132,6 @@ for category_name, category  in categories.items():
             "tag" : category_tag, #{ type: Array, default:[] }, // 강의 소개
             "for_recommend" : category_for_recommend, #{ type: Array, default:[] }, // 강의 대상
             "paid" : category_paid, #{ type: Number, default:0 }, // 가격
-            "review" : category_review, #[{ type: ObjectId , ref: "review" }], // 신청 강좌 정보(댓글)
             "body" : category_body, #{ type: String, default:"" }, // 강의 요약 정보
             "pay_div" : category_pay_div, #{ type: Boolean, default:"중" }, // 강의 유무료 여부
             "teacher" : category_teacher, #[{ type: ObjectId , required: true, ref: "teacher" }], // 강의자

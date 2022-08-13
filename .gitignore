@@ -219,4 +219,8 @@ $RECYCLE.BIN/
 *.mp4
 *.jpg
 *.json
-crwaler.py
+*.zip
+
+jsonfile
+video
+json_video_files
